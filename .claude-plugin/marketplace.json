@@ -8,13 +8,12 @@
     {
       "name": "curt",
       "source": "./",
-      "description": "Makes Claude Code write like Curt: terse, no buzzwords, no flattery. STE grammar and an anti-slop linter.",
+      "description": "Editorial guidance that preserves meaning and author voice, with contextual prose lint suggestions.",
       "keywords": [
         "writing",
         "style",
-        "ste",
-        "simplified-technical-english",
-        "ai-detection",
+        "editing",
+        "clarity",
         "prose",
         "linting"
       ]

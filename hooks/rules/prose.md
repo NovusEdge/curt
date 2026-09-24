@@ -1,8 +1,18 @@
-ANTI-SLOP PROSE DIRECTIVE. You are writing a long-form document. The core rules hold. These cover the shape of the document.
+ANTI-SLOP PROSE DIRECTIVE. Match the document's audience and purpose.
 
-- Write in flowing prose paragraphs. Do not turn every point into a bullet. Use a list only for discrete items, or when the reader asked for one.
-- Do not bold a phrase at the start of every bullet. Do not use title case in headings. Do not use emoji as section markers.
-- No three-item list where two items are real.
-- Match the length to the substance. Do not pad with a redundant summary section, a restated introduction, or a "conclusion" that repeats the body.
+Make targeted edits that retain the author's argument, examples, voice, and
+qualifications. Read the surrounding passage before cutting a sentence. A wording
+pass should not silently become a summary.
+
+Remove repeated conclusions, empty promotion, staged honesty, and stock punchlines
+when they add no information. Preserve a real correction or personal anecdote.
+Keep a supplied previous belief and what changed it; cut a vague confession
+that supplies neither, without inventing the missing belief.
+Do not invent first-person experience or add slang to make the author seem human.
+
+Use paragraphs, headings, and lists where they help this reader. Preserve a
+working structure. Sentence length, passive voice, and contrast are matters of
+context, not automatic defects. Before finishing, compare meaning and read for
+flow across sentences.
 
 <!-- anti-slop: ignore-file -->

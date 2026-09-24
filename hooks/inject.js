@@ -33,20 +33,19 @@ const GUARD_EXT = [...CODE_EXT, ...PROSE_EXT].map(e => e.slice(1)).join('|');
 const NOT_IN_AUTO = '<!-- curt: not-in-auto -->';
 const ONLY_IN_AUTO = '<!-- curt: only-in-auto -->';
 const DIRECTIVE = {
-  sycophancy: 'ANTI-SYCOPHANCY DIRECTIVE',
-  word: 'BANNED VOCABULARY RULE',
-  phrase: 'BANNED CONSTRUCTION RULE',
-  structure: 'STRUCTURAL SLOP RULE',
-  verbosity: 'BREVITY RULE',
-  ambiguous: 'WRITING-STYLE NOTE (soft, judge it)',
-  default: 'ANTI-SLOP RULE',
+  sycophancy: 'Response substance',
+  word: 'Word choice',
+  phrase: 'Construction',
+  structure: 'Passage structure',
+  verbosity: 'Length',
+  ambiguous: 'Context-dependent wording',
+  default: 'Editorial note',
 };
 const SHORT =
-  'ANTI-SLOP DIRECTIVE, still in force: be surgical (lead with the outcome, ' +
-  'no preamble or closing summary), one adjective not three, no contrast ' +
-  'constructions ("it\'s not X, it\'s Y"), no LLM vocabulary (delve, leverage, ' +
-  'crucial, "load-bearing"), no LinkedIn cadence, no flattery and no apologies, ' +
-  'no servile closer, active voice, one fact per sentence.';
+  'CURT WRITING REMINDER: preserve meaning, qualifications, and the author\'s ' +
+  'voice. Make the smallest useful edit. Remove empty rhetoric without ' +
+  'inventing facts or experience. Judge lint matches in context; they are ' +
+  'suggestions, not mandatory rewrites or proof of AI authorship.';
 
 // readRuleFile strips the ignore marker so the injected context omits it.
 // A line tagged NOT_IN_AUTO drops out under the auto permission mode.
@@ -231,10 +230,11 @@ function midTurn(data) {
       seen = [...priorSeen, ...shown.map(key)].slice(-40);
       blocks.push(
         [
-          'ANTI-SLOP: your prose earlier in this turn breaks the rules below.',
+          'CURT: possible editorial issues in prose earlier in this turn:',
           ...shown.map(v => `  ${DIRECTIVE[v.kind] || DIRECTIVE.default}: ${v.match} — "${v.sentence}"`),
-          'Write the rest of this turn without them. Do not rewrite the earlier ' +
-            'text and do not mention this notice.',
+          'Inspect these in context. Keep wording that serves the reader and ' +
+            'preserves the author\'s meaning and voice. No rewrite is required ' +
+            'merely to clear a match; continue the user\'s task.',
         ].join('\n')
       );
     }
@@ -290,7 +290,7 @@ function report(data) {
   const shown = ordered.slice(0, MAX_REPORTED);
   const out = [];
   for (const kind of [...new Set(shown.map(v => v.kind))]) {
-    out.push(`${DIRECTIVE[kind] || DIRECTIVE.default} VIOLATED in your previous message:`);
+    out.push(`${DIRECTIVE[kind] || DIRECTIVE.default}: possible editorial issues in your previous message:`);
     for (const v of shown.filter(v => v.kind === kind)) {
       out.push(`  ${v.match} — "${v.sentence}"`);
     }
@@ -299,9 +299,9 @@ function report(data) {
     out.push(`  ...and ${violations.length - MAX_REPORTED} more`);
   }
   out.push(
-    'These are hard rules. Rewrite the offending construction in every reply ' +
-      'from now on. Do not acknowledge this notice and do not revisit the ' +
-      'previous message.'
+    'These are heuristic matches. Judge them in context; keep useful wording, ' +
+      'facts, qualifications, and voice. Do not rewrite or add another reply ' +
+      'solely to clear a match. Continue the user\'s task.'
   );
   return out;
 }

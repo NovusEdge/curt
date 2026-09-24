@@ -2,7 +2,7 @@
   "name": "curt",
   "displayName": "Curt",
   "version": "0.4.3",
-  "description": "Makes Claude Code write like Curt: terse, no buzzwords, no flattery. STE grammar and an anti-slop linter.",
+  "description": "Editorial guidance that preserves meaning and author voice, with contextual prose lint suggestions.",
   "author": {
     "name": "NovusEdge"
   },
@@ -11,9 +11,8 @@
   "keywords": [
     "writing",
     "style",
-    "ste",
-    "simplified-technical-english",
-    "ai-detection",
+    "editing",
+    "clarity",
     "prose",
     "linting"
   ]

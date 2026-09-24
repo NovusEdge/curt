@@ -1,8 +1,8 @@
-ANTI-SLOP COMMIT DIRECTIVE. You are writing a commit message. The core rules hold. These cover the message shape.
+ANTI-SLOP COMMIT DIRECTIVE. Follow the repository's commit conventions.
 
-- The subject is imperative and under ~50 characters: "Fix the lock order", not "Fixed the lock order" or "Fixing lock".
-- The body states what changed and why. It does not narrate how you found the answer or what you tried first.
-- No "as requested", no defending the change to a reviewer.
-- One fact per sentence. Active voice. Simple past for what happened.
+The subject names the concrete change. The body explains the problem, resulting
+behavior, and relevant validation at the detail this change needs. Preserve
+qualifications and material limits; omit repeated descriptions and investigation
+history unless they explain a decision a reviewer needs to understand.
 
 <!-- anti-slop: ignore-file -->

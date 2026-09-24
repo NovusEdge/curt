@@ -1,4 +1,4 @@
-# Hooks and enforcement
+# Hooks and editorial guidance
 
 Five hooks run without being invoked.
 
@@ -10,7 +10,12 @@ Five hooks run without being invoked.
 | `PostToolUse` | every tool call | Routes one context rule file in (`code`/`prose`/`commit`, once each per session), then lints the prose written so far and reports a finding next to the tool result. |
 | `UserPromptSubmit` | every prompt | Lints the previous turn and names what `PostToolUse` did not reach. Every 9th prompt it restates a one-line reminder. |
 
-The prose-lint hooks never block. `PostToolUse` and `UserPromptSubmit` carry their findings as `additionalContext` at a point where the model is about to write anyway, so a finding steers the next words and adds no generation. A `Stop` hook could send the model back to rewrite, at the cost of a second message. The `PreToolUse` guard is the one hook that can stop a call, and it asks by default rather than denying.
+The prose-lint hooks never block. They present matches as possible editorial
+issues to judge in context. A match does not require a rewrite or establish AI
+authorship. `PostToolUse` carries findings in `additionalContext`;
+`UserPromptSubmit` prints the previous turn's findings as hook context. Neither
+asks for another generated response solely to clear a finding. The `PreToolUse`
+guard is the one hook that can stop a call, and it asks by default rather than denying.
 
 ## Configuration
 
@@ -36,10 +41,16 @@ Reflexive agreement is the sycophancy that a single sentence cannot reveal. "You
 2. The reply's first two sentences open by agreeing (`you're right`, `good catch`, `my mistake`, …).
 3. The reply cites nothing: no `file:line`, no path, no command output, no number with a unit.
 
-An agreement backed by `worker.go:88` never trips it, and a reply that disagrees never trips it. The three marker lists live in `patterns.json`.
+An agreement backed by `worker.go:88` never trips it, and a reply that disagrees never trips it. The three marker lists live in `patterns.json`. This heuristic cannot establish whether the agent actually checked the claim; a match is a prompt to inspect the substance, not a ban on acknowledging mistakes.
 
 ## False positives
 
-The hook reports only the sets named in `hook_confidence` in `patterns.json`. Three exclusions keep it usable: `ambiguous_words` (`harness`, `robust`, …) never fire; a word the user wrote is skipped; fenced code, inline code, blockquotes, and quoted spans are skipped. Known misses the word list cannot avoid: `leverage` as the finance noun, `Foster` as a surname. The STE and em-dash sets stay out of the hook for the same reason.
+The hook reports only the sets named in `hook_confidence` in `patterns.json`.
+It excludes ambiguous words, words repeated from the user's message, fenced and
+inline code, blockquotes, and quoted spans. Remaining matches can still be false
+positives, such as `leverage` as a finance noun or `Foster` as a surname. The STE
+and em-dash sets stay out of the hook. The writing guidance treats all matches
+as suggestions and preserves useful wording. The standalone linter's existing
+strict profile and exit codes are unchanged.
 
 <!-- anti-slop: ignore-file (this file quotes the banned patterns) -->

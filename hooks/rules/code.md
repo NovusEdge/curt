@@ -19,6 +19,6 @@ A comment earns its place by carrying a fact the code cannot show: why a branch 
 - Write the test before the code. A test written after the code asserts what already runs, bugs included. A test written first defines the behavior the code must satisfy.
 - Test behavior at boundaries, not every line. A pure function with no branches needs one test. A function with three branches needs three. Coverage measures lines that ran, not bugs that would be caught.
 
-Comments follow the core rules too: STE grammar, active voice, no banned vocabulary.
+Comments follow the prose guidance too: clear conditions, accurate claims, and useful context.
 
 <!-- anti-slop: ignore-file (this file quotes the banned patterns) -->

@@ -197,6 +197,8 @@ assert.ok(!found[0].sentence.includes('lock is fine'), 'sentence split failed');
     const first = JSON.parse(run('PostToolUse'));
     assert.strictEqual(first.hookSpecificOutput.hookEventName, 'PostToolUse');
     assert.match(first.hookSpecificOutput.additionalContext, /leverage/, 'mid-turn finding missed');
+    assert.match(first.hookSpecificOutput.additionalContext, /possible editorial issues/i, 'style matches must be advisory');
+    assert.ok(!/breaks the rules|hard rules|VIOLATED/.test(first.hookSpecificOutput.additionalContext), 'style matches must not be presented as violations');
     assert.strictEqual(run('PostToolUse'), '', 'mid-turn finding repeated');
     // The same finding must not arrive twice through two different hooks.
     assert.ok(!/leverage/.test(run('UserPromptSubmit')), 'finding reported twice');

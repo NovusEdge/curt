@@ -1,139 +1,78 @@
 ---
 name: anti-slop
-description: "Audit prose a human reads — comments, docstrings, commit messages, PR bodies, docs, chat replies. STE grammar, no AI buzzwords, no LinkedIn cadence, surgical brevity. Use anti-slop-code for source files."
-version: 0.1.0
+description: Use when writing or editing prose that feels padded, formulaic, promotional, or unlike its author, including technical docs, personal blogs, portfolio pages, comments, and PR descriptions. Use anti-slop-code for code structure.
+metadata:
+  version: 0.2.0
 ---
 
-# anti-slop
+# Anti-slop
 
-A writing discipline for technical prose that humans have to read: code comments, docstrings, commit bodies, PR descriptions, design docs, READMEs.
+Improve the reader's understanding while keeping the author's meaning and voice.
+Default to the smallest useful edit. A successful pass can leave a paragraph unchanged.
 
-Four layers, applied together:
+## Work from the text
 
-1. **STE grammar** — Simplified Technical English rules from ASD-STE100. One fact per sentence, active voice, simple tenses, short sentences, no dropped articles.
-2. **Banned vocabulary** — Words and phrases that mark text as LLM-generated on sight. Reach for the ordinary word.
-3. **Structural hygiene** — No contrast constructions, rhetorical questions, LinkedIn cadence, or meta-commentary about the text itself.
-4. **No sycophancy** — No flattery, no reflexive agreement, no apology inflation, no servile closer. Verify a correction before you accept it.
+Establish the audience, purpose, and requested action. A review returns findings;
+an edit changes the requested material. Read enough surrounding text to understand
+the argument and distinguish the author's habits from an isolated awkward line.
 
-## When to Use
+Preserve facts, qualifications, examples, links, technical identifiers, and the
+distinction between planned, implemented, and tested behavior. Keep the reasons
+and transitions that connect the argument. A wording pass is not a summary.
 
-- Writing or reviewing code comments, docstrings, commit messages
-- Drafting PR descriptions or design doc sections
-- Any prose a developer will read repeatedly
-- Agent-to-agent messages where ambiguity has cost
+Use the supplied facts for a wording-only edit. Separate a suspected factual
+problem from the editorial fix: flag it or check the relevant source when that
+is in scope. Do not silently strengthen, weaken, or resolve the claim to make
+the sentence cleaner. Never invent an anecdote, motive, feeling, or first-person
+experience to make writing sound human.
 
-Not for: marketing copy, user-facing content that needs voice, creative writing.
+## Edit the passage, not its vocabulary
 
-## The Rules
+First identify what the sentence contributes. Remove repeated information or
+ceremony, then repair only the connections the cut affects.
 
-### STE Grammar
+Watch for passages that stage a revelation, announce honesty, praise the author's
+own skepticism, ask a question merely to deliver a punchline, or close every
+section with a slogan. Keep the actual correction, evidence, or implication.
+Treat these as contextual signals, not forbidden strings. A real change of mind
+can be essential to an essay. Retain what the author previously believed and what
+changed it when the text supplies those facts. An opener such as "there goes a
+line I'd been leaning on" alone supplies neither; cut it without inventing the
+missing belief.
 
-| Rule | Do | Don't |
-|---|---|---|
-| One fact per sentence | Split on "and" or comma splice | "X and also Y which means Z" |
-| Short sentences | Under ~20 words | Drop subject/verb/article to hit count |
-| Simple tenses | "returns", "failed" | "has been returning", "will have failed" |
-| Active voice | "qemu unlinks the socket" | "the socket is unlinked" |
-| No -ing sentence openers | "handles", "uses" | "Handling the case where..." |
-| Articles on countable nouns | "the lock", "a socket" | "lock ensures..." |
-| Noun stacks ≤3 words | "vm registry lock" | "vm registry lock timeout retry config" |
-| Concrete over abstract | A name, type, number | "the system", "various parts" |
+Replace an empty promise with the supported behavior and its limits. If those
+facts are missing, flag the gap. Do not substitute a quieter unsupported promise.
 
-See `references/ste-rules.md` for the full 12 rules with examples.
+Keep useful jokes, profanity, contractions, opinions, and varied sentence lengths
+already present in the author's work. Do not manufacture casualness with new
+slang, deliberate mistakes, clipped fragments, or a stock cynical persona.
 
-### Banned Vocabulary
+For technical instructions, make actors, conditions, sequence, and consequences
+clear. Split a sentence when its structure obscures those relationships; keep
+related clauses together when that makes the relationship easier to follow.
+For blogs and portfolio pages, retain the argument and the reasons the author
+cares. A page about an unfinished project must remain clear about its status.
 
-**The worst offender:** "load-bearing" — say what actually depends on it.
+Word lists and lint matches suggest places to look. They do not establish
+authorship or prove a defect. Passive voice, contrast, ordinary adjectives,
+headings, apologies, and lists can all serve a real purpose. There is no sentence
+length cap, mandatory STE grammar, or target reduction percentage.
 
-**Puffed verbs/adjectives:** delve, leverage, harness, foster, bolster, underscore, showcase, illuminate, facilitate, garner, navigate (figurative), unpack (figurative), elevate, streamline, spearhead, robust, seamless, meticulous, intricate, comprehensive, pivotal, crucial, vital, key (adj), multifaceted, nuanced, holistic, vibrant, compelling
+## Compare before finishing
 
-**Metaphor nouns:** tapestry, landscape, realm, ecosystem (outside software), beacon, cornerstone, backbone, lifeblood, north star, journey, deep dive, game-changer, paradigm, interplay, symphony
+Read the revision against the original. Check for lost examples and arguments,
+changed uncertainty or numbers, missing conditions, newly invented experience,
+and a replacement voice that is uniformly terse or polished. Restore anything
+meaningful lost merely for brevity. Read the paragraph as a whole for rhythm and
+logical connections.
 
-**Significance inflation:** "a testament to", "stands as", "serves as", "plays a crucial role", "underscores the importance of", "marks a shift", "at its core", "the reality is", "it's worth noting", "fundamentally", "profound", "transformative", "powerful" (about code), "elegant" (about your own work)
+Return the requested edit. For a review, cite the passage, its reader-facing
+problem, and a specific correction. Report only material unresolved questions
+and verification limits. Do not add a ceremonial account of the editing process.
 
-**Transition scaffolding:** moreover, furthermore, additionally, notably, importantly, "that said" (paragraph opener), "in today's fast-paced X", "when it comes to X", "let's dive in"
+For a difficult passage, consult [structural-patterns.md](references/structural-patterns.md).
+Other references cover [word choice](references/banned-vocabulary.md),
+[technical clarity](references/ste-rules.md), and
+[responding to corrections](references/sycophancy.md).
 
-**Hedge-and-flatter openers:** "Great question", "You're absolutely right", "I hope this finds you well", "Certainly!", "Absolutely."
-
-See `references/banned-vocabulary.md` for the complete list with rationale.
-
-### Structural Patterns to Avoid
-
-**Contrast construction** — Never define a thing by first negating something unstated:
-- "it's not X, it's Y"
-- "X isn't just Y"
-- "less A, more B"
-- "the real question isn't A, it's B"
-
-Delete the negated half. State the real thing on its own.
-
-**LinkedIn cadence:**
-- One-line paragraph dropped in for punch
-- Rhetorical question you then answer yourself
-- Closing aphorism restating the paragraph as a slogan
-- Counting what follows ("Three things...", "Two reasons...")
-
-**Sycophancy** — Flattery, reflexive agreement, apology inflation:
-- "Great question", "Good catch", "You're absolutely right", "That's a clean design"
-- "I apologize for the confusion", "Sorry about that", "Thanks for catching that"
-- "Absolutely!", "Perfect!", exclamation marks in technical prose
-- "Both approaches are valid" where a recommendation belongs
-
-A correction is a claim. Verify it, then state the corrected fact on its own. Say so with evidence when the correction is wrong. See `references/sycophancy.md`.
-
-**Servile closer** — A sign-off that hands the decision back instead of ending the message:
-- "Say the word and I'll ...", "Just let me know"
-- "Happy to ...", "I'd be glad to ...", "Feel free to ..."
-- "Hope this helps", "Shall I proceed?", "Does that work for you?"
-
-State what remains available and stop. The reader knows they can reply. Ask a real question only when the answer changes the work and no default is defensible. Then ask it plainly, on its own line.
-
-**Meta-commentary:**
-- "To be clear", "Quick framing first"
-- "I don't want this read as..."
-- Recapping what the reader already sees
-
-**Structural tells:**
-- Three-item lists where two items are real
-- Uniform sentence length across a paragraph
-- Bolding a phrase in every bullet
-- Emoji as section markers
-
-See `references/structural-patterns.md` for detection heuristics and `references/sycophancy.md` for the judgment half.
-
-## Process
-
-1. **Draft normally.** Don't self-censor while writing.
-2. **Scan for banned vocab.** Ctrl+F the worst offenders (delve, leverage, robust, crucial).
-3. **Check sentence structure.** Split compound sentences. Convert passive to active.
-4. **Cut meta-commentary.** Delete sentences about the text itself.
-5. **Read aloud.** If you wouldn't say it to a colleague in a hallway, rewrite it.
-
-## Output
-
-When reviewing text, produce a table:
-
-```markdown
-| Violation | Original | Fixed |
-|---|---|---|
-| Banned: "leverage" | "leverage the cache" | "use the cache" |
-| Passive voice | "the file is deleted" | "the handler deletes the file" |
-| Contrast construction | "It's not about speed, it's about correctness" | "Correctness matters more here" |
-```
-
-If the text already complies, say so. Don't force changes onto clean prose.
-
-## Boundaries
-
-**Will:**
-- Flag banned vocabulary and suggest replacements
-- Rewrite passive voice, compound tenses, -ing openers
-- Detect and remove contrast constructions
-- Strip meta-commentary and LinkedIn cadence
-
-**Will not:**
-- Simplify creative or marketing copy where voice matters
-- Drop precision to shorten sentences
-- Enforce rules inside code fences or inline code spans
-
-<!-- anti-slop: ignore-file (this file quotes the banned patterns) -->
+<!-- anti-slop: ignore-file (this file discusses lint patterns) -->

@@ -1,8 +1,9 @@
 # curt
 
-Curt makes Claude Code stop writing like a chatbot. No "you're absolutely right", no recap of the diff you just read, no `leverage` where `use` works.
-
-The rules load before the model writes. A linter catches the rest.
+Curt provides editing guidance for Claude Code and a heuristic prose linter.
+It favors targeted edits that preserve meaning, useful detail, and the author's
+voice. Lint matches identify passages to inspect; they do not prove bad writing
+or AI authorship.
 
 ## Install
 
@@ -28,20 +29,21 @@ Restart Claude Code after.
 
 Injected at session start. A router adds code, prose, or commit rules from context ([docs/hooks.md](docs/hooks.md)).
 
-- Outcome first. No preamble, no summary of the diff.
-- One adjective per noun.
-- No filler vocabulary: `delve`, `leverage`, `crucial`, `load-bearing`, ~40 more.
-- No "it's not X, it's Y", no rhetorical questions.
-- No flattery, no reflexive apology.
-- No "happy to help" sign-off.
-- STE grammar: one fact per sentence, active voice.
+- Preserve facts, qualifications, examples, and the author's existing voice.
+- Remove empty promotion, staged revelations, honesty narration, and repeated endings.
+- Keep meaningful corrections, jokes, and personal observations.
+- Distinguish proposed, implemented, and tested behavior.
+- Never invent experience or stronger claims to make the prose read better.
+- Use connected sentences and the structure the reader needs.
 
-No hard word cap. Anthropic tried one (100 words) in April 2026 and pulled it four days later after a 3% eval drop.
+There is no sentence cap, one-fact rule, or automatic requirement to rewrite a
+flagged word. The standalone linter still provides its existing strict lint
+profile for callers that explicitly choose it.
 
 ## Usage
 
 ```
-/curt:anti-slop         prose: comments, docstrings, commits, PRs, docs
+/curt:anti-slop         prose: docs, blogs, portfolio pages, comments, PRs
 /curt:anti-slop-code    code: narrator comments, dead generality, mock tests
 ```
 
