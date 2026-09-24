@@ -2,6 +2,20 @@
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0]
+
+### Changed
+
+- Reworked writing guidance around targeted edits that preserve meaning, qualifications, examples, and the author's voice. Reviews identify passages to improve; rewrites retain the substance of the original.
+- Removed mandatory sentence caps, one-fact rules, and forced bluntness from the injected guidance. Useful jokes, personal observations, and substantive changes of mind can stay.
+- Added guidance for blogs and portfolio pages: remove staged revelations and honesty narration, distinguish proposed work from tested behavior, and never invent first-person experience or stronger claims.
+- Hook lint matches now suggest inspecting the surrounding passage instead of requiring a rewrite. The standalone strict lint profile, pattern matching, context routing, and permission guards retain their existing behavior.
+
+### Added
+
+- Regression checks for the revised hook guidance.
+- A CI check that the changelog contains a section for the plugin version before a release is tagged.
+
 ## [0.4.3]
 
 ### Added
@@ -85,6 +99,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - The prose linter, the banned-vocabulary and sycophancy layers, and the session-start directive.
 
+[0.5.0]: https://github.com/NovusEdge/curt/releases/tag/v0.5.0
 [0.4.3]: https://github.com/NovusEdge/curt/releases/tag/v0.4.3
 [0.4.2]: https://github.com/NovusEdge/curt/releases/tag/v0.4.2
 [0.4.1]: https://github.com/NovusEdge/curt/releases/tag/v0.4.1
