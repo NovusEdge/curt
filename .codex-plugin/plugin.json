@@ -1,0 +1,29 @@
+{
+  "name": "curt",
+  "version": "0.5.0",
+  "description": "Editorial guidance that preserves meaning and author voice, with contextual prose lint suggestions.",
+  "author": {
+    "name": "NovusEdge",
+    "url": "https://github.com/NovusEdge"
+  },
+  "homepage": "https://github.com/NovusEdge/curt",
+  "repository": "https://github.com/NovusEdge/curt",
+  "license": "MIT",
+  "keywords": [
+    "writing",
+    "style",
+    "editing",
+    "clarity",
+    "prose",
+    "linting"
+  ],
+  "skills": "./skills/",
+  "hooks": "./hooks/codex.json",
+  "interface": {
+    "displayName": "Curt",
+    "shortDescription": "Editorial guidance that preserves meaning and author voice.",
+    "developerName": "NovusEdge",
+    "category": "Productivity",
+    "websiteURL": "https://github.com/NovusEdge/curt"
+  }
+}

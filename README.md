@@ -25,6 +25,48 @@ curl -fsSL https://raw.githubusercontent.com/NovusEdge/curt/main/install.sh | ba
 
 Restart Claude Code after.
 
+### Codex
+
+```shell
+codex plugin marketplace add nimble-fox-ai/agent-plugins
+codex plugin add curt@nimble-fox
+```
+
+Or straight from this repo, without the team marketplace:
+
+```shell
+codex plugin marketplace add NovusEdge/curt
+codex plugin add curt@curt
+```
+
+Codex does not run a plugin's hooks until you review and trust them: open `/hooks` in
+the Codex CLI after installing. The `curt` skills load without that step.
+
+What carries over to Codex:
+
+| Part | Codex |
+|---|---|
+| `anti-slop`, `anti-slop-code` skills | Same files, no copy. |
+| `SessionStart` | Injects `rules/core.md`. |
+| `SubagentStart` | Injects `rules/core.md`. |
+| `UserPromptSubmit` | The reminder every `ANTI_SLOP_REMIND_EVERY` prompts. |
+| `PostToolUse` | Routes the commit rules in after a `git commit`. |
+
+What does not:
+
+- The lint of the previous turn and of the turn so far. It reads a Claude Code transcript,
+  and Codex writes another format, so on Codex it finds nothing and stays silent.
+- Code and prose rule routing after `Write`/`Edit`. Codex reports file edits as
+  `apply_patch`, with the patch text in `tool_input.command` and no `file_path`.
+- The `PreToolUse` Bash guard. Codex fails a hook that returns `permissionDecision: "ask"`,
+  the guard's default.
+
+Bump the version in both `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json`; CI
+checks they match. The Codex manifest is the compatibility form, not the portable root
+`plugin.json`, because Codex 0.153.4 ignores hooks declared there.
+
+The plugin has no agents, commands or MCP servers, so nothing is left out there.
+
 ## Rules
 
 Injected at session start. A router adds code, prose, or commit rules from context ([docs/hooks.md](docs/hooks.md)).
