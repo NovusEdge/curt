@@ -4,6 +4,7 @@
     "name": "NovusEdge",
     "url": "https://github.com/NovusEdge"
   },
+  "description": "Editorial guidance that preserves meaning and author voice.",
   "plugins": [
     {
       "name": "curt",

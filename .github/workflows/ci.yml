@@ -28,6 +28,14 @@ jobs:
       # release.yml builds the notes from the section matching the tag, and it
       # fails after the tag is already pushed. v0.4.0 through v0.4.2 each shipped
       # a version bump with no section and left a tag with no release.
+      - name: Codex and Claude manifests agree on the version
+        run: |
+          python3 - <<'EOF'
+          import json
+          v = [json.load(open(p))['version'] for p in ('.claude-plugin/plugin.json', '.codex-plugin/plugin.json')]
+          assert v[0] == v[1], f'.claude-plugin is {v[0]}, .codex-plugin is {v[1]}'
+          EOF
+
       - name: changelog covers the plugin version
         run: |
           v=$(python3 -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['version'])")
