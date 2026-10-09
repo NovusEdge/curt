@@ -62,8 +62,8 @@ What does not:
   the guard's default.
 
 Bump the version in both `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json`; CI
-checks they match. The Codex manifest is the compatibility form, not the portable root
-`plugin.json`, because Codex 0.153.4 ignores hooks declared there.
+checks they match. The Codex manifest lives in `.codex-plugin/` because Codex 0.153.4
+ignores hooks declared in a portable root `plugin.json`.
 
 The plugin has no agents, commands or MCP servers, so nothing is left out there.
 
