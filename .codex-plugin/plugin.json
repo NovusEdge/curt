@@ -1,6 +1,6 @@
 {
   "name": "curt",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Editorial guidance that preserves meaning and author voice, with contextual prose lint suggestions.",
   "author": {
     "name": "NovusEdge",
