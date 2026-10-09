@@ -2,6 +2,21 @@
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0]
+
+### Added
+
+- A Codex plugin in `.codex-plugin/plugin.json`, sharing `skills/` with the Claude plugin, with Codex hooks in `hooks/codex.json`. Install it with `codex plugin marketplace add NovusEdge/curt` and `codex plugin add curt@curt`.
+- In Codex, both skills and the SessionStart, SubagentStart and UserPromptSubmit hooks carry over. The PostToolUse hook applies commit rules after `git commit`.
+- `.agents/plugins/marketplace.json`, so the repo is its own Codex marketplace.
+- A CI check that the Claude and Codex manifests carry the same version.
+
+### Not in Codex
+
+- The transcript lint, because Codex writes a different transcript format.
+- Code and prose rule routing after file edits, because Codex reports edits as `apply_patch` with no `file_path`.
+- The PreToolUse Bash guard, because Codex fails a hook that returns `permissionDecision: "ask"`.
+
 ## [0.5.0]
 
 ### Changed
