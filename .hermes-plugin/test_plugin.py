@@ -343,5 +343,107 @@ class PreviousReplyTest(PluginCase):
         self.assertIsNotNone(self.prompt([user("why"), assistant(SLOP), user("ok")], session_id="b"))
 
 
+class MidTurnTest(PluginCase):
+    def tool_result(self, tool_name="terminal", args=None, result="ok", turn_id="t1"):
+        return PLUGIN.transform_tool_result(
+            tool_name=tool_name, args=args or {"command": "ls"}, result=result,
+            session_id="s1", turn_id=turn_id)
+
+    def interim(self, text, turn_id="t1"):
+        PLUGIN.on_interim_message(text=text, already_streamed=False, turn_id=turn_id, session_id="s1")
+
+    def test_register_wires_the_mid_turn_hooks(self):
+        ctx = FakeCtx()
+        PLUGIN.register(ctx)
+        self.assertIs(ctx.hooks["on_interim_message"], PLUGIN.on_interim_message)
+        self.assertIs(ctx.hooks["transform_tool_result"], PLUGIN.transform_tool_result)
+        self.assertIs(ctx.hooks["pre_tool_call"], PLUGIN.pre_tool_call)
+
+    def test_no_prose_and_no_rule_leaves_the_result(self):
+        self.assertIsNone(self.tool_result())
+
+    def test_interim_slop_is_appended(self):
+        self.interim(SLOP)
+        out = self.tool_result(result="exit 0")
+        self.assertTrue(out.startswith("exit 0\n\nCURT: possible editorial issues in prose earlier in this turn:"))
+        self.assertIn("Word choice: delve", out)
+
+    def test_soft_findings_stay_out(self):
+        self.interim(SOFT_ONLY)
+        self.assertIsNone(self.tool_result())
+
+    def test_a_finding_is_shown_once_per_turn(self):
+        self.interim(SLOP)
+        self.assertIsNotNone(self.tool_result())
+        self.assertIsNone(self.tool_result())
+
+    def test_rule_file_routes_once_per_session(self):
+        first = self.tool_result("write_file", {"path": "src/app.py", "content": ""})
+        self.assertIn(rules.read_rule("code", auto=False), first)
+        self.assertIsNone(self.tool_result("patch", {"path": "src/other.py"}, turn_id="t2"))
+        commit = self.tool_result("terminal", {"command": "git commit -m 'x'"})
+        self.assertIn(rules.read_rule("commit", auto=False), commit)
+
+    def test_non_string_result_is_untouched(self):
+        self.interim(SLOP)
+        self.assertIsNone(self.tool_result(result={"exit_code": 0}))
+
+    def test_late_interim_is_caught_by_the_next_prompt(self):
+        PLUGIN.pre_llm_call(session_id="s1", turn_id="t1", user_message="why",
+                            conversation_history=[user("why")], is_first_turn=True)
+        self.assertIsNone(self.tool_result())
+        self.interim(SLOP)
+        text = self.prompt([user("why"), assistant(SLOP), user("ok")], turn_id="t2")
+        self.assertIn("delve", text)
+
+    def test_node_missing_still_routes_rules(self):
+        self.interim(SLOP)
+        with mock.patch.object(node_runner, "find_node", return_value=None), \
+                mock.patch.object(node_runner, "_warned_missing", False), \
+                self.assertLogs(node_runner.logger, "WARNING"):
+            out = self.tool_result("write_file", {"path": "notes.md"})
+        self.assertIn(rules.read_rule("prose", auto=False), out)
+        self.assertNotIn("CURT: possible editorial issues", out)
+
+
+class GuardTest(PluginCase):
+    def guard(self, command, tool_name="terminal"):
+        return PLUGIN.pre_tool_call(tool_name=tool_name, args={"command": command}, session_id="s1")
+
+    def test_ask_is_the_default(self):
+        with mock.patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("ANTI_SLOP_TOOL_GUARD", None)
+            out = self.guard("sed -i s/a/b/ app.py")
+        self.assertEqual(out, {"action": "approve",
+                               "message": "curt: " + rules.HERMES_REASON["in_place"]})
+
+    def test_deny_blocks(self):
+        with mock.patch.dict(os.environ, {"ANTI_SLOP_TOOL_GUARD": "deny"}):
+            out = self.guard("cat src/main.go")
+        self.assertEqual(out, {"action": "block", "message": "curt: " + rules.HERMES_REASON["read"]})
+
+    def test_off_disables(self):
+        with mock.patch.dict(os.environ, {"ANTI_SLOP_TOOL_GUARD": "off"}):
+            self.assertIsNone(self.guard("sed -i s/a/b/ app.py"))
+
+    def test_approvals_off_disables(self):
+        with mock.patch.object(rules, "approvals_off", return_value=True):
+            self.assertIsNone(self.guard("sed -i s/a/b/ app.py"))
+
+    def test_harmless_command_passes(self):
+        self.assertIsNone(self.guard("grep -rn foo src"))
+
+    def test_other_tools_pass(self):
+        self.assertIsNone(self.guard("sed -i s/a/b/ app.py", tool_name="execute_code"))
+
+    def test_missing_args_pass(self):
+        self.assertIsNone(PLUGIN.pre_tool_call(tool_name="terminal", args=None))
+        self.assertIsNone(PLUGIN.pre_tool_call(tool_name="terminal", args={}))
+
+    def test_internal_error_passes(self):
+        with mock.patch.object(rules, "file_op_reason", side_effect=RuntimeError):
+            self.assertIsNone(self.guard("sed -i s/a/b/ app.py"))
+
+
 if __name__ == "__main__":
     unittest.main()

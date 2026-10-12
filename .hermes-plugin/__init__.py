@@ -116,6 +116,69 @@ def _pre_llm_call(session_id=None, turn_id=None, user_message=None, conversation
     return {"context": "\n".join(out)} if out else None
 
 
+def on_interim_message(text=None, turn_id=None, session_id=None, **_):
+    if text:
+        session(session_id).interim.setdefault(turn_id or "", []).append(text)
+
+
+def _midturn_lint(s, turn_id):
+    prose = "\n\n".join(s.interim.get(turn_id, []))
+    if not prose:
+        return None
+    seen = s.seen.setdefault(turn_id, [])
+    fresh = [v for v in _check(prose, s.user.get(turn_id, ""))
+             if not v.get("soft") and report.key(v) not in seen]
+    if not fresh:
+        return None
+    shown = fresh[:report.MAX_REPORTED]
+    seen.extend(report.key(v) for v in shown)
+    del seen[:-40]
+    return report.midturn_report(shown)
+
+
+def transform_tool_result(tool_name=None, args=None, result=None, session_id=None, turn_id=None, **_):
+    if not isinstance(result, str):
+        return None
+    try:
+        s = session(session_id)
+        blocks = []
+        target = rules.rule_target(tool_name, args)
+        if target and target not in s.injected:
+            text = rules.read_rule(target, rules.approvals_off())
+            if text:
+                blocks.append(text)
+                s.injected.add(target)
+        finding = _midturn_lint(s, turn_id or "")
+        if finding:
+            blocks.append(finding)
+    except Exception:
+        logger.debug("curt: mid-turn lint failed", exc_info=True)
+        return None
+    return result + "\n\n" + "\n\n".join(blocks) if blocks else None
+
+
+def pre_tool_call(tool_name=None, args=None, **_):
+    # Hermes blocks a pre_tool_call callback that overruns its timeout, so this
+    # stays in-process and returns None on any error.
+    try:
+        posture = (os.environ.get("ANTI_SLOP_TOOL_GUARD") or "ask").lower()
+        if posture == "off" or tool_name != "terminal" or not isinstance(args, dict):
+            return None
+        kind = rules.file_op_reason(args.get("command"))
+        if not kind or rules.approvals_off():
+            return None
+        message = "curt: " + rules.HERMES_REASON[kind]
+        if posture == "deny":
+            return {"action": "block", "message": message}
+        return {"action": "approve", "message": message}
+    except Exception:
+        logger.debug("curt: tool guard failed", exc_info=True)
+        return None
+
+
 def register(ctx):
     ctx.register_system_prompt_section("curt.core", core_section, max_chars=SECTION_MAX)
     ctx.register_hook("pre_llm_call", pre_llm_call)
+    ctx.register_hook("on_interim_message", on_interim_message)
+    ctx.register_hook("transform_tool_result", transform_tool_result)
+    ctx.register_hook("pre_tool_call", pre_tool_call)
