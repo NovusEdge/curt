@@ -1,0 +1,9 @@
+name: curt
+version: 0.6.0
+description: Writing rules, prose lint and tool discipline for Hermes Agent
+author: NovusEdge
+provides_hooks:
+  - pre_llm_call
+  - on_interim_message
+  - transform_tool_result
+  - pre_tool_call

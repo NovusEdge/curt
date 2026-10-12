@@ -208,5 +208,117 @@ class ReportTest(unittest.TestCase):
         self.assertEqual(report.key(self.V[0]), "word:delve:Let us delve.")
 
 
+class FakeCtx:
+    def __init__(self):
+        self.hooks = {}
+        self.sections = {}
+
+    def register_hook(self, name, callback):
+        self.hooks[name] = callback
+
+    def register_system_prompt_section(self, id, content, *, position="after_memory", max_chars=4000):
+        self.sections[id] = (content, max_chars)
+
+
+class PluginCase(unittest.TestCase):
+    def setUp(self):
+        PLUGIN._sessions.clear()
+        patcher = mock.patch.object(rules, "approvals_off", return_value=False)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def prompt(self, messages, turn_id="t2", session_id="s1", first=False):
+        result = PLUGIN.pre_llm_call(
+            session_id=session_id, turn_id=turn_id, user_message=messages[-1]["content"],
+            conversation_history=messages, is_first_turn=first)
+        return result["context"] if result else None
+
+
+class CoreSectionTest(PluginCase):
+    def test_register_adds_the_core_section(self):
+        ctx = FakeCtx()
+        PLUGIN.register(ctx)
+        content, max_chars = ctx.sections["curt.core"]
+        self.assertEqual(max_chars, PLUGIN.SECTION_MAX)
+        self.assertIn("Reach for the dedicated tool", content({}))
+
+    def test_section_follows_approvals_off(self):
+        with mock.patch.object(rules, "approvals_off", return_value=True):
+            self.assertNotIn("Reach for the dedicated tool", PLUGIN.core_section({}))
+
+    def test_oversized_core_moves_to_the_first_prompt(self):
+        big = "x" * (PLUGIN.SECTION_MAX + 1)
+        with mock.patch.object(rules, "read_rule", return_value=big):
+            self.assertEqual(PLUGIN.core_section({}), "")
+            self.assertTrue(self.prompt([user("hi")], first=True).startswith(big))
+            self.assertIsNone(self.prompt([user("hi"), assistant(CLEAN), user("again")]))
+
+
+class PreviousReplyTest(PluginCase):
+    def test_register_wires_pre_llm_call(self):
+        ctx = FakeCtx()
+        PLUGIN.register(ctx)
+        self.assertIs(ctx.hooks["pre_llm_call"], PLUGIN.pre_llm_call)
+
+    def test_first_prompt_is_silent(self):
+        self.assertIsNone(self.prompt([user("hi")], first=True))
+
+    def test_slop_is_reported(self):
+        text = self.prompt([user("why"), assistant(SLOP), user("ok")])
+        self.assertIn("Response substance: possible editorial issues in your previous message:", text)
+        self.assertIn("delve", text)
+        self.assertTrue(text.rstrip().endswith("Continue the user's task."))
+
+    def test_clean_reply_is_silent(self):
+        self.assertIsNone(self.prompt([user("why"), assistant(CLEAN), user("ok")]))
+
+    def test_same_turn_is_reported_once(self):
+        messages = [user("why"), assistant(SLOP), user("ok")]
+        self.assertIsNotNone(self.prompt(messages, turn_id="t2"))
+        self.assertIsNone(self.prompt(messages, turn_id="t3"))
+
+    def test_user_vocabulary_is_exempt(self):
+        messages = [user("can we leverage the cache?"), assistant("We leverage the cache."), user("ok")]
+        self.assertIsNone(self.prompt(messages))
+
+    def test_findings_shown_mid_turn_are_dropped(self):
+        PLUGIN.pre_llm_call(session_id="s1", turn_id="t1", user_message="why",
+                            conversation_history=[user("why")], is_first_turn=True)
+        s = PLUGIN.session("s1")
+        s.seen["t1"] = [report.key({"kind": "word", "match": "delve",
+                                    "sentence": "Let us delve into this robust solution."})]
+        text = self.prompt([user("why"), assistant(SLOP), user("ok")], turn_id="t2")
+        self.assertNotIn("delve", text)
+        self.assertIn("Great question", text)
+
+    def test_reminder_every_ninth_prompt(self):
+        texts = [self.prompt([user(f"p{i}")], turn_id=f"t{i}") for i in range(1, 10)]
+        self.assertEqual(texts[:8], [None] * 8)
+        self.assertEqual(texts[8], report.SHORT)
+
+    def test_reminder_cadence_reads_the_env(self):
+        with mock.patch.object(PLUGIN, "REMIND_EVERY", 2):
+            texts = [self.prompt([user(f"p{i}")], turn_id=f"t{i}") for i in range(1, 3)]
+        self.assertEqual(texts, [None, report.SHORT])
+
+    def test_empty_turn_ids_keep_the_current_turn(self):
+        self.prompt([user("why")], turn_id="")
+        PLUGIN.session("s1").interim[""] = ["kept"]
+        self.prompt([user("why"), assistant(CLEAN), user("ok")], turn_id="")
+        self.assertEqual(PLUGIN.session("s1").user[""], "ok")
+
+    def test_node_missing_keeps_the_reminder(self):
+        with mock.patch.object(node_runner, "find_node", return_value=None), \
+                mock.patch.object(node_runner, "_warned_missing", False), \
+                self.assertLogs(node_runner.logger, "WARNING"):
+            texts = [self.prompt([user("why"), assistant(SLOP), user(f"p{i}")], turn_id=f"t{i}")
+                     for i in range(1, 10)]
+        self.assertEqual(texts[8], report.SHORT)
+
+    def test_sessions_are_separate(self):
+        self.prompt([user("why"), assistant(SLOP), user("ok")], session_id="a")
+        self.assertIsNotNone(self.prompt([user("why"), assistant(SLOP), user("ok")], session_id="b"))
+
+
 if __name__ == "__main__":
     unittest.main()
