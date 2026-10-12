@@ -332,4 +332,60 @@ assert.ok(!found[0].sentence.includes('lock is fine'), 'sentence split failed');
   assert.ok(!/not-in-auto/.test(rules('default')), 'the marker must not reach the model');
 }
 
+// Hermes runs check.js as a subprocess with --json. It must return exactly what
+// the in-process check() returns, on every hook row of the corpus.
+{
+  const { execFileSync } = require('child_process');
+  const corpus = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '..', 'tests', 'corpus.json'), 'utf8')
+  );
+  const cli = payload =>
+    execFileSync('node', [path.join(__dirname, 'check.js'), '--json'], {
+      input: payload,
+      encoding: 'utf8',
+    });
+  let ran = 0;
+  for (const c of corpus.cases) {
+    if (!c.tools.includes('hook')) continue;
+    ran++;
+    assert.deepStrictEqual(
+      JSON.parse(cli(JSON.stringify({ assistant: c.text, user: '' }))),
+      check(c.text, ''),
+      `--json diverged from check() for ${JSON.stringify(c.text)}`
+    );
+  }
+  assert.deepStrictEqual(
+    JSON.parse(cli(JSON.stringify({ assistant: 'We leverage the cache.', user: 'can we leverage the cache?' }))),
+    [],
+    '--json must pass the user text through for the vocabulary exemption'
+  );
+  assert.deepStrictEqual(JSON.parse(cli('')), [], '--json on empty stdin returns no findings');
+  let status = 0;
+  try {
+    cli('not json {{{');
+  } catch (error) {
+    status = error.status;
+  }
+  assert.strictEqual(status, 2, '--json on malformed stdin must exit 2');
+  console.log(`--json ok (${ran} cases)`);
+}
+
+// The Hermes plugin ports fileOpReason to Python. Both run this list.
+{
+  const KIND = {
+    'use the Edit tool for an in-place change instead of sed -i.': 'in_place',
+    'use the Write or Edit tool to change a file instead of a shell redirect.': 'redirect',
+    'use the Write tool to create a file instead of tee.': 'tee',
+    'use the Read tool to read a file instead of cat, head, or tail.': 'read',
+  };
+  const list = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '..', 'tests', 'fileops.json'), 'utf8')
+  );
+  for (const c of list.cases) {
+    const reason = fileOpReason(c.command);
+    assert.strictEqual(reason === null ? null : KIND[reason], c.kind, `fileops: ${c.command}`);
+  }
+  console.log(`fileops ok (${list.cases.length} cases)`);
+}
+
 console.log('selftest ok');
