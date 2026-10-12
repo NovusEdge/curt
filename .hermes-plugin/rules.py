@@ -41,7 +41,7 @@ HERMES_REASON = {
 def read_rule(name: str, auto: bool) -> str | None:
     try:
         text = (RULES_DIR / f"{name}.md").read_text(encoding="utf-8")
-    except OSError:
+    except (OSError, ValueError):
         return None
     lines = [
         line for line in text.split("\n")

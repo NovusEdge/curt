@@ -167,6 +167,12 @@ class RulesTest(unittest.TestCase):
     def test_read_rule_missing_file(self):
         self.assertIsNone(rules.read_rule("no-such-rule", auto=False))
 
+    def test_read_rule_invalid_utf8(self):
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / "core.md").write_bytes(b"\xff\xfe")
+            with mock.patch.object(rules, "RULES_DIR", Path(d)):
+                self.assertIsNone(rules.read_rule("core", auto=False))
+
     def test_approvals_off(self):
         with mock.patch.dict(os.environ, {"HERMES_YOLO_MODE": "1"}):
             self.assertTrue(rules.approvals_off())
@@ -296,7 +302,7 @@ class PreviousReplyTest(PluginCase):
         self.assertEqual(texts[:8], [None] * 8)
         self.assertEqual(texts[8], report.SHORT)
 
-    def test_reminder_cadence_reads_the_env(self):
+    def test_reminder_cadence_follows_remind_every(self):
         with mock.patch.object(PLUGIN, "REMIND_EVERY", 2):
             texts = [self.prompt([user(f"p{i}")], turn_id=f"t{i}") for i in range(1, 3)]
         self.assertEqual(texts, [None, report.SHORT])
@@ -318,6 +324,11 @@ class PreviousReplyTest(PluginCase):
         PLUGIN.session("s1").interim[""] = ["kept"]
         self.prompt([user("why"), assistant(CLEAN), user("ok")], turn_id="")
         self.assertEqual(PLUGIN.session("s1").user[""], "ok")
+        self.assertNotIn("", PLUGIN.session("s1").interim)
+
+    def test_unexpected_errors_never_escape(self):
+        with mock.patch.object(rules, "read_rule", side_effect=ValueError("boom")):
+            self.assertIsNone(self.prompt([user("hi")], first=True))
 
     def test_node_missing_keeps_the_reminder(self):
         with mock.patch.object(node_runner, "find_node", return_value=None), \

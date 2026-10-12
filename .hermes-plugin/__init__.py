@@ -21,7 +21,10 @@ SECTION_MAX = 4000
 
 
 def parse_remind_every(raw):
-    """Prompts between reminders; 0 disables, as a NaN does in hooks/inject.js."""
+    """Prompts between reminders. Zero, negative and non-integer values disable it.
+
+    hooks/inject.js only disables on NaN; it still fires for negatives and decimals.
+    """
     if not raw:
         return 9
     try:
@@ -81,8 +84,16 @@ def _previous_report(s, previous_turn_id, conversation_history):
     return report.previous_report(fresh) if fresh else []
 
 
-def pre_llm_call(session_id=None, turn_id=None, user_message=None, conversation_history=None,
-                 is_first_turn=False, **_):
+def pre_llm_call(**kwargs):
+    try:
+        return _pre_llm_call(**kwargs)
+    except Exception:
+        logger.debug("curt: pre_llm_call failed", exc_info=True)
+        return None
+
+
+def _pre_llm_call(session_id=None, turn_id=None, user_message=None, conversation_history=None,
+                  is_first_turn=False, **_):
     s = session(session_id)
     out = []
     if is_first_turn:
