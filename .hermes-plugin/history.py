@@ -9,7 +9,7 @@ def text_of(message: dict) -> str:
         return content
     if isinstance(content, list):
         return "\n".join(
-            part.get("text", "") for part in content
+            part.get("text") or "" for part in content
             if isinstance(part, dict) and part.get("type") in TEXT_PARTS)
     return ""
 

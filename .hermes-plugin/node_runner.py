@@ -18,7 +18,10 @@ def find_node() -> str | None:
     if found:
         return found
     # The Hermes installer ships its own node, which is not always on PATH.
-    hermes_home = Path(os.environ.get("HERMES_HOME") or Path.home() / ".hermes")
+    try:
+        hermes_home = Path(os.environ.get("HERMES_HOME") or Path.home() / ".hermes")
+    except RuntimeError:  # Path.home() when no home directory resolves
+        return None
     bundled = hermes_home / "node" / "bin" / "node"
     return str(bundled) if bundled.is_file() else None
 
@@ -32,9 +35,15 @@ def run_json(script: Path, payload: dict) -> object | None:
             _warned_missing = True
         return None
     try:
+        stdin = json.dumps(payload)
+    except (TypeError, ValueError) as exc:
+        logger.debug("curt: payload for %s is not JSON-serializable: %s", script.name, exc)
+        return None
+    try:
+        # Explicit utf-8 with replacement: the locale codec would raise on stray bytes.
         done = subprocess.run(
-            [node, str(script), "--json"], input=json.dumps(payload),
-            capture_output=True, text=True, timeout=TIMEOUT_S)
+            [node, str(script), "--json"], input=stdin, capture_output=True,
+            encoding="utf-8", errors="replace", timeout=TIMEOUT_S)
     except (OSError, subprocess.TimeoutExpired) as exc:
         logger.debug("curt: %s did not finish: %s", script.name, exc)
         return None

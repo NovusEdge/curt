@@ -58,6 +58,11 @@ class HistoryTest(unittest.TestCase):
             {"type": "text", "text": "two"}]}
         self.assertEqual(history.text_of(message), "one\ntwo")
 
+    def test_text_of_none_text_part(self):
+        message = {"role": "assistant", "content": [
+            {"type": "text", "text": None}, {"type": "output_text", "text": "kept"}]}
+        self.assertEqual(history.text_of(message), "\nkept")
+
     def test_text_of_tool_call_only_message(self):
         self.assertEqual(history.text_of(assistant(None, tool_calls=[{"id": "c"}])), "")
 
@@ -86,7 +91,26 @@ class NodeRunnerTest(unittest.TestCase):
         self.assertIn("delve", [v["match"] for v in out])
 
     def test_missing_node_returns_none(self):
-        with mock.patch.object(node_runner, "find_node", return_value=None):
+        with mock.patch.object(node_runner, "find_node", return_value=None), \
+                mock.patch.object(node_runner, "_warned_missing", False), \
+                self.assertLogs(node_runner.logger, "WARNING"):
+            self.assertIsNone(node_runner.run_json(self.CHECK, {"assistant": SLOP}))
+
+    def test_invalid_utf8_output_returns_none(self):
+        bad = self.tmp / "bad.js"
+        bad.write_text("process.stdout.write(Buffer.from([0xff, 0xfe]));")
+        self.assertIsNone(node_runner.run_json(bad, {}))
+
+    def test_unserializable_payload_returns_none(self):
+        self.assertIsNone(node_runner.run_json(self.CHECK, {"assistant": object()}))
+
+    def test_no_home_directory_returns_none(self):
+        with mock.patch.object(node_runner.shutil, "which", return_value=None), \
+                mock.patch.dict(os.environ, {}, clear=False), \
+                mock.patch.object(node_runner.Path, "home", side_effect=RuntimeError), \
+                mock.patch.object(node_runner, "_warned_missing", True):
+            os.environ.pop("HERMES_HOME", None)
+            self.assertIsNone(node_runner.find_node())
             self.assertIsNone(node_runner.run_json(self.CHECK, {"assistant": SLOP}))
 
     def test_timeout_returns_none(self):
