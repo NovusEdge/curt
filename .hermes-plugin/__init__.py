@@ -117,8 +117,11 @@ def _pre_llm_call(session_id=None, turn_id=None, user_message=None, conversation
 
 
 def on_interim_message(text=None, turn_id=None, session_id=None, **_):
-    if text:
-        session(session_id).interim.setdefault(turn_id or "", []).append(text)
+    try:
+        if text:
+            session(session_id).interim.setdefault(turn_id or "", []).append(text)
+    except Exception:
+        logger.debug("curt: interim capture failed", exc_info=True)
 
 
 def _midturn_lint(s, turn_id):
@@ -143,14 +146,19 @@ def transform_tool_result(tool_name=None, args=None, result=None, session_id=Non
         s = session(session_id)
         blocks = []
         target = rules.rule_target(tool_name, args)
+        delivered = None
         if target and target not in s.injected:
             text = rules.read_rule(target, rules.approvals_off())
             if text:
                 blocks.append(text)
-                s.injected.add(target)
+                delivered = target
         finding = _midturn_lint(s, turn_id or "")
         if finding:
             blocks.append(finding)
+        # Mark the rule only once the whole result is built; a lint failure
+        # above must not consume a rule that was never delivered.
+        if delivered:
+            s.injected.add(delivered)
     except Exception:
         logger.debug("curt: mid-turn lint failed", exc_info=True)
         return None

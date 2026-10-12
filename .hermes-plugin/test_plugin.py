@@ -406,12 +406,48 @@ class MidTurnTest(PluginCase):
         self.assertNotIn("CURT: possible editorial issues", out)
 
 
+    def test_unhashable_ids_never_escape(self):
+        self.assertIsNone(PLUGIN.on_interim_message(text="x", turn_id="t1", session_id=["s"]))
+
+    def test_internal_error_returns_none(self):
+        with mock.patch.object(PLUGIN, "_midturn_lint", side_effect=RuntimeError):
+            self.assertIsNone(self.tool_result())
+
+    def test_cap_and_seen_trim(self):
+        findings = [{"kind": "word", "match": f"w{i}", "sentence": f"s{i}"} for i in range(12)]
+        self.interim("some prose")
+        with mock.patch.object(PLUGIN, "_check", return_value=findings):
+            first = self.tool_result()
+            second = self.tool_result()
+        for i in range(8):
+            self.assertIn(f"w{i} ", first)
+        self.assertNotIn("w8 ", first)
+        for i in range(8, 12):
+            self.assertIn(f"w{i} ", second)
+        self.assertNotIn("w0 ", second)
+
+    def test_seen_never_exceeds_forty(self):
+        findings = [{"kind": "word", "match": f"w{i}", "sentence": f"s{i}"} for i in range(100)]
+        self.interim("some prose")
+        with mock.patch.object(PLUGIN, "_check", return_value=findings):
+            for _ in range(13):
+                self.tool_result()
+        self.assertLessEqual(len(PLUGIN.session("s1").seen["t1"]), 40)
+
+    def test_rule_survives_a_failed_lint(self):
+        args = {"path": "src/app.py", "content": ""}
+        with mock.patch.object(PLUGIN, "_midturn_lint", side_effect=RuntimeError):
+            self.assertIsNone(self.tool_result("write_file", args))
+        out = self.tool_result("write_file", args)
+        self.assertIn(rules.read_rule("code", auto=False), out)
+
+
 class GuardTest(PluginCase):
     def guard(self, command, tool_name="terminal"):
         return PLUGIN.pre_tool_call(tool_name=tool_name, args={"command": command}, session_id="s1")
 
     def test_ask_is_the_default(self):
-        with mock.patch.dict(os.environ, {}, clear=False):
+        with mock.patch.dict(os.environ):
             os.environ.pop("ANTI_SLOP_TOOL_GUARD", None)
             out = self.guard("sed -i s/a/b/ app.py")
         self.assertEqual(out, {"action": "approve",
