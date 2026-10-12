@@ -18,7 +18,20 @@ logger = logging.getLogger(__name__)
 CHECK_JS = Path(__file__).resolve().parent.parent / "hooks" / "check.js"
 # Hermes caps one plugin section at 4,000 characters and skips an empty one.
 SECTION_MAX = 4000
-REMIND_EVERY = int(os.environ.get("ANTI_SLOP_REMIND_EVERY") or 9)
+
+
+def parse_remind_every(raw):
+    """Prompts between reminders; 0 disables, as a NaN does in hooks/inject.js."""
+    if not raw:
+        return 9
+    try:
+        n = int(raw)
+    except ValueError:
+        return 0
+    return max(n, 0)
+
+
+REMIND_EVERY = parse_remind_every(os.environ.get("ANTI_SLOP_REMIND_EVERY"))
 
 
 class Session:
@@ -87,7 +100,7 @@ def pre_llm_call(session_id=None, turn_id=None, user_message=None, conversation_
     s.turn_id = turn_id or ""
     s.user[s.turn_id] = history.text_of({"content": user_message})
     s.prompts += 1
-    if s.prompts % REMIND_EVERY == 0:
+    if REMIND_EVERY > 0 and s.prompts % REMIND_EVERY == 0:
         out.append(report.SHORT)
     return {"context": "\n".join(out)} if out else None
 

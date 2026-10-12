@@ -301,6 +301,18 @@ class PreviousReplyTest(PluginCase):
             texts = [self.prompt([user(f"p{i}")], turn_id=f"t{i}") for i in range(1, 3)]
         self.assertEqual(texts, [None, report.SHORT])
 
+    def test_disabled_reminder_never_fires(self):
+        # "0" and "abc" both parse to 0.
+        with mock.patch.object(PLUGIN, "REMIND_EVERY", PLUGIN.parse_remind_every("abc")):
+            texts = [self.prompt([user(f"p{i}")], turn_id=f"t{i}") for i in range(1, 12)]
+        self.assertEqual(texts, [None] * 11)
+
+    def test_parse_remind_every(self):
+        parse = PLUGIN.parse_remind_every
+        self.assertEqual(
+            [parse(v) for v in (None, "", "4", "0", "-3", "abc", "2.5")],
+            [9, 9, 4, 0, 0, 0, 0])
+
     def test_empty_turn_ids_keep_the_current_turn(self):
         self.prompt([user("why")], turn_id="")
         PLUGIN.session("s1").interim[""] = ["kept"]
