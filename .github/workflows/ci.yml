@@ -31,12 +31,15 @@ jobs:
       # release.yml builds the notes from the section matching the tag, and it
       # fails after the tag is already pushed. v0.4.0 through v0.4.2 each shipped
       # a version bump with no section and left a tag with no release.
-      - name: Codex and Claude manifests agree on the version
+      - name: Codex, Hermes and Claude manifests agree on the version
         run: |
           python3 - <<'EOF'
-          import json
+          import json, re
           v = [json.load(open(p))['version'] for p in ('.claude-plugin/plugin.json', '.codex-plugin/plugin.json')]
           assert v[0] == v[1], f'.claude-plugin is {v[0]}, .codex-plugin is {v[1]}'
+          m = re.search(r'^version:\s*(\S+)', open('.hermes-plugin/plugin.yaml').read(), re.M)
+          assert m, '.hermes-plugin/plugin.yaml has no version line'
+          assert m.group(1) == v[0], f'.claude-plugin is {v[0]}, .hermes-plugin/plugin.yaml is {m.group(1)}'
           EOF
 
       - name: changelog covers the plugin version

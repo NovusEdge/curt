@@ -134,9 +134,10 @@ def _midturn_lint(s, turn_id):
     if not fresh:
         return None
     shown = fresh[:report.MAX_REPORTED]
+    text = report.midturn_report(shown)
     seen.extend(report.key(v) for v in shown)
     del seen[:-40]
-    return report.midturn_report(shown)
+    return text
 
 
 def transform_tool_result(tool_name=None, args=None, result=None, session_id=None, turn_id=None, **_):

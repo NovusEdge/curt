@@ -405,7 +405,6 @@ class MidTurnTest(PluginCase):
         self.assertIn(rules.read_rule("prose", auto=False), out)
         self.assertNotIn("CURT: possible editorial issues", out)
 
-
     def test_unhashable_ids_never_escape(self):
         self.assertIsNone(PLUGIN.on_interim_message(text="x", turn_id="t1", session_id=["s"]))
 
