@@ -1,5 +1,5 @@
 name: curt
-version: 0.6.0
+version: 0.7.0
 description: Writing rules, prose lint and tool discipline for Hermes Agent
 author: NovusEdge
 provides_hooks:
