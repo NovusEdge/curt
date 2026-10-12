@@ -185,6 +185,15 @@ class RulesTest(unittest.TestCase):
             with mock.patch.object(rules, "_approvals_mode", side_effect=RuntimeError):
                 self.assertFalse(rules.approvals_off())
 
+    def test_session_yolo_counts_as_approvals_off(self):
+        with mock.patch.dict(os.environ):
+            os.environ.pop("HERMES_YOLO_MODE", None)
+            with mock.patch.object(rules, "_approvals_mode", return_value="smart"):
+                with mock.patch.object(rules, "_session_yolo", return_value=True):
+                    self.assertTrue(rules.approvals_off())
+                with mock.patch.object(rules, "_session_yolo", side_effect=ImportError):
+                    self.assertFalse(rules.approvals_off())
+
 
 class ReportTest(unittest.TestCase):
     V = [

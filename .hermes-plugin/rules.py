@@ -85,11 +85,21 @@ def _approvals_mode() -> str:
     return str((load_config_readonly().get("approvals") or {}).get("mode") or "")
 
 
+def _session_yolo() -> bool:
+    # /yolo in a gateway chat turns approvals off for that session only, without
+    # touching HERMES_YOLO_MODE or approvals.mode.
+    from tools.approval import is_current_session_yolo_enabled
+    return bool(is_current_session_yolo_enabled())
+
+
 def approvals_off() -> bool:
     """Hermes's counterpart of Claude Code's auto permission mode."""
     if os.environ.get("HERMES_YOLO_MODE"):
         return True
-    try:
-        return _approvals_mode().lower() == "off"
-    except Exception:
-        return False
+    for check in (_session_yolo, lambda: _approvals_mode().lower() == "off"):
+        try:
+            if check():
+                return True
+        except Exception:
+            continue
+    return False
