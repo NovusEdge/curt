@@ -67,6 +67,16 @@ ignores hooks declared in a portable root `plugin.json`.
 
 The plugin has no agents, commands or MCP servers, so nothing is left out there.
 
+### Hermes Agent
+
+```bash
+hermes plugins install NovusEdge/curt --enable
+```
+
+The core rules load into every new Hermes session. The previous-reply lint, mid-turn findings and the file-op guard run as Hermes hooks. Prose lint runs `hooks/check.js` with `node`, from `PATH` or the copy Hermes installs in `~/.hermes/node`; without node, the rules and the guard still work. Skills are not part of the Hermes plugin: point Hermes's `skills.external_dirs` at this repo's `skills/` to use them.
+
+To turn the plugin off, run `hermes plugins disable curt`.
+
 ## Rules
 
 Injected at session start. A router adds code, prose, or commit rules from context ([docs/hooks.md](docs/hooks.md)).

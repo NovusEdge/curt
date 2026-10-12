@@ -244,3 +244,26 @@ function clip(s) {
 
 module.exports = { check, lastTurn, sentences, prosify };
 
+// Hermes runs this file directly: {"assistant", "user"} on stdin, the check()
+// result as one JSON line on stdout. Hermes hands over message text, not a
+// transcript, so lastTurn does not apply.
+if (require.main === module && process.argv.includes('--json')) {
+  let input = '';
+  process.stdin.setEncoding('utf8');
+  process.stdin.on('data', chunk => {
+    input += chunk;
+  });
+  process.stdin.on('end', () => {
+    let data;
+    try {
+      data = JSON.parse(input || '{}');
+    } catch {
+      process.exitCode = 2;
+      return;
+    }
+    const assistant = String((data && data.assistant) || '');
+    const user = String((data && data.user) || '');
+    process.stdout.write(JSON.stringify(assistant.trim() ? check(assistant, user) : []) + '\n');
+  });
+}
+

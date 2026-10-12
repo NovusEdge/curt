@@ -1,0 +1,19 @@
+{
+  "_comment": "Shared by hooks/selftest.js (fileOpReason) and .hermes-plugin/test_plugin.py (file_op_reason). kind names the rule each command trips, null when it passes.",
+  "cases": [
+    {"command": "sed -i s/a/b/ src/app.py", "kind": "in_place"},
+    {"command": "perl -pi -e s/a/b/ notes.md", "kind": "in_place"},
+    {"command": "echo hi > README.md", "kind": "redirect"},
+    {"command": "printf x >> src/lib.rs", "kind": "redirect"},
+    {"command": "ls | tee out.txt", "kind": "tee"},
+    {"command": "cat src/main.go", "kind": "read"},
+    {"command": "head -n 5 docs/guide.md", "kind": "read"},
+    {"command": "tail -f app.log", "kind": null},
+    {"command": "cat /tmp/scratch", "kind": null},
+    {"command": "echo hi > /dev/null", "kind": null},
+    {"command": "grep -rn foo src", "kind": null},
+    {"command": "git commit -m \"fix\"", "kind": null},
+    {"command": "sed -n 1,5p src/app.py", "kind": null},
+    {"command": "python3 tools/lint.py README.md", "kind": null}
+  ]
+}
