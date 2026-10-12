@@ -53,4 +53,23 @@ and em-dash sets stay out of the hook. The writing guidance treats all matches
 as suggestions and preserves useful wording. The standalone linter's existing
 strict profile and exit codes are unchanged.
 
+## Hermes Agent
+
+The plugin in `.hermes-plugin/` maps each hook onto Hermes:
+
+| Claude Code | Hermes |
+|---|---|
+| SessionStart, SubagentStart | system-prompt section `curt.core`, kept through compression |
+| UserPromptSubmit | `pre_llm_call` |
+| PostToolUse | `on_interim_message` collects the turn's prose; `transform_tool_result` appends rule files and findings to the tool result |
+| PreToolUse on Bash | `pre_tool_call` on `terminal`; `ask` maps to Hermes's approval prompt, `deny` to a block |
+
+Hermes delivers interim messages on a background queue, so prose written just before a fast tool call can miss the mid-turn check. The next prompt's lint covers the whole previous turn and reports it then.
+
+The guard is off when Hermes runs without approvals (`--yolo` or `approvals.mode: off`), the counterpart of auto mode. Its messages name Hermes's `patch`, `write_file` and `read_file` tools.
+
+`ANTI_SLOP_REMIND_EVERY` set to zero, a negative number or a non-integer value disables the periodic reminder in Hermes.
+
+Run the plugin tests with `python3 .hermes-plugin/test_plugin.py`.
+
 <!-- anti-slop: ignore-file (this file quotes the banned patterns) -->

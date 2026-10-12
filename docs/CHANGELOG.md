@@ -2,6 +2,14 @@
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- A Hermes Agent plugin in `.hermes-plugin/`. Install it with `hermes plugins install NovusEdge/curt --enable`. The core rules, previous-reply lint, mid-turn findings and the file-op guard carry over; skills do not.
+- `node hooks/check.js --json`, for hosts that pass message text instead of a transcript.
+- `tests/fileops.json`, shared by the Node and Python file-op checks.
+
 ## [0.6.0]
 
 ### Added

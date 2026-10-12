@@ -25,6 +25,9 @@ jobs:
       - name: changelog extractor selftest
         run: python3 tools/changelog_section.py --selftest
 
+      - name: Hermes plugin tests
+        run: python3 .hermes-plugin/test_plugin.py
+
       # release.yml builds the notes from the section matching the tag, and it
       # fails after the tag is already pushed. v0.4.0 through v0.4.2 each shipped
       # a version bump with no section and left a tag with no release.
@@ -63,7 +66,7 @@ jobs:
           fi
 
       - name: lint own comments
-        run: python3 tools/lint.py --check --code tools/ hooks/ install.sh
+        run: python3 tools/lint.py --check --code tools/ hooks/ install.sh .hermes-plugin/
 
   node:
     runs-on: ubuntu-latest

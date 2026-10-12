@@ -1,4 +1,4 @@
-"""Finding keys, ranking and message text, matching hooks/inject.js."""
+"""Python port of the finding keys, ranking and message text in hooks/inject.js."""
 
 MAX_REPORTED = 8
 DIRECTIVE = {
